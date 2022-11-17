@@ -2,6 +2,7 @@
 
 namespace Kingscode\ActiveCampaignApi\Providers;
 
+use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Support\ServiceProvider;
 
 class ActiveCampaignProvider extends ServiceProvider
@@ -23,8 +24,9 @@ class ActiveCampaignProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/activecampaign.php' => config_path('activecampaign.php'),
         ]);
+
         $this->mergeConfigFrom(
-            __DIR__.'/../config/logging.php', 'logging'
+            __DIR__.'/../config/logging.php', 'logging.channels'
         );
     }
 
