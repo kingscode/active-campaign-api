@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "php": ">=7.4.0",
-        "activecampaign/api-php": "*"
+        "php": "^7.4 || ^8.0",
+        "activecampaign/api-php": "v2.0.3"
     },
     "require-dev": {
         "orchestra/testbench": "^3.8"
@@ -20,5 +20,12 @@
             "Kingscode\\ActiveCampaignApi\\": "src/"
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kingscode\\ActiveCampaignApi\\Providers\\ActiveCampaignProvider"
+            ],
+        }
+    }
 }
