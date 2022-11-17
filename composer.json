@@ -1,0 +1,24 @@
+{
+    "name": "kingscode/active-campaign-api",
+    "description": "Wrapper for PHP api made by AC",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Niels Wijn",
+            "email" : "niels@kingscode.nl"
+        }
+    ],
+    "require": {
+        "php": ">=7.4.0",
+        "activecampaign/api-php": "*"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^3.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kingscode\\ActiveCampaignApi\\": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
