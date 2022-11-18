@@ -2,6 +2,7 @@
 
 namespace Kingscode\ActiveCampaignApi\Providers;
 
+use Kingscode\ActiveCampaignApi\Client\ActiveCampaign;
 use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +27,7 @@ class ActiveCampaignProvider extends ServiceProvider
         ]);
 
         $this->mergeConfigFrom(
+
             __DIR__.'/../config/logging.php', 'logging.channels'
         );
     }
@@ -37,9 +39,9 @@ class ActiveCampaignProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('ActiveCampaign',  function($app) {
+        $this->app->singleton(ActiveCampaign::class,  function($app) {
             $config = $app['config']['activecampaign'];
-            return new \ActiveCampaign($config['url'], $config['key']);
+            return new ActiveCampaign($config['url'], $config['key']);
         });
     }
 
@@ -50,6 +52,6 @@ class ActiveCampaignProvider extends ServiceProvider
      */
     public function provides()
     {
-        return [\ActiveCampaign::class];
+        return [ActiveCampaign::class];
     }
 }
