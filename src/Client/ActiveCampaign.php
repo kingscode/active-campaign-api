@@ -2,10 +2,11 @@
 
 namespace Kingscode\ActiveCampaignApi\Client;
 
+use Exception;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Kingscode\ActiveCampaignApi\Log\Log;
-use mysql_xdevapi\Exception;
 
 class ActiveCampaign
 {
@@ -167,8 +168,8 @@ class ActiveCampaign
 
                 $response = $call();
             }
-        } catch (Exception $e) {
-            Log::activecampaign()->error($e->getMessage());
+        } catch (Exception|RequestException $e) {
+            Log::activecampaign()->error($e->getMessage() . ' => ' . $e->getTraceAsString());
 
             $response = json_decode($e->getMessage(), true);
         } finally {
