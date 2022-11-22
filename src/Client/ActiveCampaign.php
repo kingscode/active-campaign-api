@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Testing\Assert;
 use Kingscode\ActiveCampaignApi\Log\Log;
 
 class ActiveCampaign
@@ -22,6 +23,9 @@ class ActiveCampaign
 
     public function __construct(string $url, string $apiKey, ?int $version = 3)
     {
+        Assert::assertNotEmpty($url, 'Make sure the Active Campaign URL is set in your ENV');
+        Assert::assertNotEmpty($apiKey, 'Make sure the Active Campaign API key is set in your ENV');
+
         $this->baseUri = sprintf('%s/api/%d/', $url, $version);
 
         $this->baseHeaders = [
@@ -42,10 +46,12 @@ class ActiveCampaign
         return $this->rateLimitedCall(
             function () use ($url, $queryParams) {
                 $response = Http::withHeaders($this->baseHeaders)
-                    ->retry(3, 20)
+                    ->retry(3, 2000,  function ($exception) {
+                        return $this->validateWhenRetry($exception);
+                    })
                     ->get($url);
 
-                return $response->json();
+                return $response?->json() ?: [];
             }
         );
     }
@@ -61,10 +67,12 @@ class ActiveCampaign
         return $this->rateLimitedCall(
             function () use ($url, $queryParams) {
                 $response = Http::withHeaders($this->baseHeaders)
-                    ->retry(3, 20)
+                    ->retry(3, 2000,  function ($exception) {
+                        return $this->validateWhenRetry($exception);
+                    })
                     ->get(sprintf('%s%s', $this->baseUri, $url), $queryParams);
 
-                return $response->json();
+                return $response?->json() ?: [];
             }
         );
     }
@@ -81,10 +89,12 @@ class ActiveCampaign
         return $this->rateLimitedCall(
             function () use ($url, $data) {
                 $response = Http::withHeaders($this->baseHeaders)
-                    ->retry(3, 20)
+                    ->retry(3, 2000, function ($exception) {
+                        return $this->validateWhenRetry($exception);
+                    })
                     ->post(sprintf('%s%s', $this->baseUri, $url), $data);
 
-                return $response->json();
+                return $response?->json() ?: [];
             }
         );
     }
@@ -101,10 +111,12 @@ class ActiveCampaign
         return $this->rateLimitedCall(
             function () use ($url, $data) {
                 $response = Http::withHeaders($this->baseHeaders)
-                    ->retry(3, 20)
+                    ->retry(3, 20, function ($exception) {
+                        return $this->validateWhenRetry($exception);
+                    })
                     ->put(sprintf('%s%s', $this->baseUri, $url), $data);
 
-                return $response->json();
+                return $response?->json() ?: [];
             }
         );
     }
@@ -121,10 +133,12 @@ class ActiveCampaign
         return $this->rateLimitedCall(
             function () use ($url, $data) {
                 $response = Http::withHeaders($this->baseHeaders)
-                    ->retry(3, 20)
+                    ->retry(3, 2000, function ($exception) {
+                        return $this->validateWhenRetry($exception);
+                    })
                     ->delete(sprintf('%s%s', $this->baseUri, $url), $data);
 
-                return $response->json();
+                return $response?->json() ?: [];
             }
         );
     }
@@ -153,6 +167,17 @@ class ActiveCampaign
         return sprintf('You may try again in %d seconds', RateLimiter::availableIn(self::RATE_LIMIT_KEY));
     }
 
+    public function validateWhenRetry(?Exception $exception)
+    {
+        switch ($exception->getCode()) {
+            case 429:
+                return true;
+            break;
+            default:
+                return false;
+        }
+    }
+
     /**
      * Rate limited call.
      *
@@ -161,7 +186,7 @@ class ActiveCampaign
      */
     private function rateLimitedCall(callable $call)
     {
-        $response = [];
+        $response = null;
         try {
             if (RateLimiter::remaining(self::RATE_LIMIT_KEY, self::RATE_LIMIT) > 0) {
                 RateLimiter::hit(self::RATE_LIMIT_KEY, self::RATE_LIMIT_DECAY);
@@ -170,8 +195,7 @@ class ActiveCampaign
             }
         } catch (Exception|RequestException $e) {
             Log::activecampaign()->error($e->getMessage() . ' => ' . $e->getTraceAsString());
-
-            $response = json_decode($e->getMessage(), true);
+            throw $e;
         } finally {
             if (RateLimiter::tooManyAttempts(self::RATE_LIMIT_KEY, self::RATE_LIMIT)) {
                 Log::activecampaign()->warning($this->getAvailableIn());

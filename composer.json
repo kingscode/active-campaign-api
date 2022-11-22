@@ -10,7 +10,6 @@
     ],
     "require": {
         "php": "^7.4 || ^8.0",
-        "activecampaign/api-php": "v2.0.3"
     },
     "require-dev": {
         "orchestra/testbench": "^3.8"
