@@ -186,7 +186,7 @@ class ActiveCampaign
      */
     private function rateLimitedCall(callable $call)
     {
-        $response = null;
+        $response = [];
         try {
             if (RateLimiter::remaining(self::RATE_LIMIT_KEY, self::RATE_LIMIT) > 0) {
                 RateLimiter::hit(self::RATE_LIMIT_KEY, self::RATE_LIMIT_DECAY);
